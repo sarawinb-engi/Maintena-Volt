@@ -18,8 +18,24 @@ db.init_app(app)
 
 @app.route('/') 
 def home():
-    render = render_template('home.html') 
-    return render 
+    homepage = render_template('home.html') 
+    return homepage 
+
+
+@app.route('/login', methods=['GET', 'POST']) 
+def login(): 
+    login_page = render_template('login.html')
+
+    return login_page
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+
+    regis = render_template('register.html')
+
+    return regis
+
 
 if __name__ == '__main__':
     with app.app_context():
