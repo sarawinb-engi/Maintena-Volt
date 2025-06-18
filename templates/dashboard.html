@@ -29,50 +29,129 @@
          <style>
             body {
                 display: flex;
-                min-height: 100vh ;
+                flex-direction: column;
+                min-height: 100vh;
+
+            }
+
+            .wrapper {
+                display: flex;
+                flex: 1;
+                min-height: 0;
             }
 
             .sidebar {
-                min-width: 250px;
+                min-width: 250px; 
                 max-width: 250px;
                 background-color: #343a40;
                 color: white;
+                flex-shrink: 0;
+                display: flex;
+                flex-direction: column;
+                padding: 1rem;
             }
 
             .sidebar a {
-                text-decoration: none;
                 color: white;
-                padding: 10px;
-                display: block;
+                text-decoration: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                margin-bottom: 5px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-weight: 500;
             }
 
-            .sidebar a:hover{
+            .sidebar a:hover, .sidebar a.active {
                 background-color: #495057;
+                text-decoration: none;
             }
 
+            /* Content */ 
             .content {
-                flex: 1;
-                padding: 20px;
+                flex-grow: 1;
+                padding: 2rem;
+                overflow-y: auto;
+                background-color: #f8f9fa;
             }
+
+            footer {
+                background-color: #343a40;
+                color: white;
+                text-align: center;
+                padding: 0.75rem, 1rem;
+                font-size: 0.9rem;
+            }
+
+            @media (max-width: 768px) {
+                .wrapper {
+                    flex-direction: column;
+                }
+
+                .sidebar {
+                    min-width: 100%;
+                    max-width: 100%;
+                    flex-direction: row;
+                    overflow-x: auto;
+                    padding: 0.5rem;
+                }
+
+                .sidebar a {
+                    flex: 1 0 auto;
+                    margin: 0 0 0.3rem;
+                    justify-content: center;
+                    font-size: 0.9rem;
+                    padding: 8px 0;
+                }
+            }
+
+
          </style>
     </head>
     <body>
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <h4> My App</h4>
+      <a href="#" class="{% if request.path == '/' %}active{% endif %}">
+        <i class="bi bi-house"></i> Home
+      </a>
+      <a href="#" class="{% if request.path == '/dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+      <a href="#" class="{% if request.path == '/settings' %}active{% endif %}">
+        <i class="bi bi-gear"></i> Settings
+      </a>
+      <a href="{{ url_for('logout') }}">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+    </nav>
 
-        <!-- <h1>Dashboard</h1> -->
+    <!-- Content -->
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
 
-        <div class="sidebar d-flex flex-column p-3">
-            <h4 class="text-white mb-4">My App</h4>
-            <a href="#">Home</a>
-            <a href="#">Dashboard</a>
-            <a href="#">Setting</a>
-            <a href="{{ url_for('logout')}}">Logout</a>
+      {% block content %}
+      <h1>Dashboard</h1>
+      <p>สวัสดี {{ current_user.username if current_user else "ผู้ใช้งาน" }}! นี่คือหน้าแดชบอร์ดของคุณ</p>
+      {% endblock %}
+    </main>
+  </div>
 
+  <footer>
+    &copy; 2025 Sarawin Buakaew - All rights reserved.
+  </footer>
         </div>
-
-        <div class="content">
-            {% block content %}{% endblock %}
-        </div>
-
         <!-- Bootstrap JS -->
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"></script>
