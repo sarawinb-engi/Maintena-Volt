@@ -3,7 +3,7 @@ from flask import request, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import os 
 from extension import db
-from models import User
+from models import User, Task
 
 
 
@@ -17,15 +17,27 @@ db.init_app(app)
 
 
 @app.route('/') 
-def home():
-    homepage = render_template('home.html') 
+def index():
+    homepage = render_template('index.html') 
     return homepage 
 
 
-@app.route('/task')
-def task():
+@app.route('/home', methods=['POST', 'GET'])
+def home():
+    equipment_type = request.form.get('equipment_type')
+    task_description = request.form.get('task_description') 
+    status = request.form.get('status')
     
-    return render_template('task.html')
+    new_task = Task(
+        equipment_type = equipment_type, 
+        task_description = task_description, 
+        status = status
+    )   
+    db.session.add(new_task) 
+    db.session.commit() 
+    
+    flash('Addition Worked Succuss!', 'success')
+    return render_template('home.html')
 
 
 @app.route('/login', methods=['GET', 'POST']) 
@@ -83,10 +95,18 @@ def register():
     return regis
 
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
 def dashboard(): 
+    total_task = Task.query.count() 
+    completed_tasks = Task.query.filter_by(status='Completed').count() 
+    pending_tasks = Task.query.filter_by(status='Pendinf').count() 
     
-    return render_template('dashboard.html')
+    
+    
+    return render_template('dashboard.html', 
+                           total_task=total_task,
+                           completed_tasks=completed_tasks,
+                           pending_tasks=pending_tasks)
 
 
 @app.route('/logout')
