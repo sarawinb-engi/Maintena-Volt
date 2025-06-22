@@ -22,6 +22,12 @@ def home():
     return homepage 
 
 
+@app.route('/task')
+def task():
+    
+    return render_template('task.html')
+
+
 @app.route('/login', methods=['GET', 'POST']) 
 def login():
     if request.method == 'POST':
