@@ -11,9 +11,15 @@ class User(db.Model):
     
 
 
-class Task(db.Model):
+class RepairReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    equipment_type = db.Column(db.String(100))
-    task_description = db.Column(db.String(200)) 
-    status = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    issue_type = db.Column(db.String(100), nullable=False)
+    subject = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(200), nullable=False)
+    reporter = db.Column(db.String(100), nullable=False)
+    contact = db.Column(db.String(100), nullable=False)
+    photo1 = db.Column(db.String(200))
+    photo2 = db.Column(db.String(200))
+    photo3 = db.Column(db.String(200))
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())

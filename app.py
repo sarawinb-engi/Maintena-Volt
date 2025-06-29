@@ -1,17 +1,19 @@
-from flask import Flask, render_template, redirect 
+from flask import Flask, render_template, redirect, url_for
 from flask import request, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import os 
 from extension import db
-from models import User, Task
+from models import User, RepairReport
+from werkzeug.utils import secure_filename
 
 
 
 app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data_testing.db' 
 app.secret_key = "user_name_-123"
-
 
 db.init_app(app)
 
@@ -22,21 +24,51 @@ def index():
     return homepage 
 
 
-@app.route('/home', methods=['POST', 'GET'])
+@app.route('/home', methods=['GET', 'POST'])
 def home():
-    equipment_type = request.form.get('equipment_type')
-    task_description = request.form.get('task_description') 
-    status = request.form.get('status')
-    
-    new_task = Task(
-        equipment_type = equipment_type, 
-        task_description = task_description, 
-        status = status
-    )   
-    db.session.add(new_task) 
-    db.session.commit() 
-    
-    flash('Addition Worked Succuss!', 'success')
+    if request.method == 'POST':
+        # ดึงค่าจากฟอร์ม
+        issue_type = request.form.get('issue_type')
+        issue_type_other = request.form.get('issue_type_other')
+        subject = request.form.get('subject')
+        description = request.form.get('description')
+        location = request.form.get('location')
+        reporter = request.form.get('reporter')
+        contact = request.form.get('contact')
+
+        # แก้ไขประเภทปัญหาหากเลือก "อื่นๆ"
+        if issue_type == 'อื่นๆ' and issue_type_other:
+            issue_type = issue_type_other
+
+        # จัดการรูปภาพ (สูงสุด 3 รูป)
+        uploaded_files = request.files.getlist('photos')
+        photo_filenames = []
+
+        for file in uploaded_files[:3]:  # จำกัดไม่เกิน 3 รูป
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(save_path)
+                photo_filenames.append(filename)
+
+        # บันทึกลงฐานข้อมูล
+        new_report = RepairReport(
+            issue_type=issue_type,
+            subject=subject,
+            description=description,
+            location=location,
+            reporter=reporter,
+            contact=contact,
+            photo1=photo_filenames[0] if len(photo_filenames) > 0 else None,
+            photo2=photo_filenames[1] if len(photo_filenames) > 1 else None,
+            photo3=photo_filenames[2] if len(photo_filenames) > 2 else None
+        )
+
+        db.session.add(new_report)
+        db.session.commit()
+        flash('ส่งเรื่องแจ้งซ่อมเรียบร้อยแล้ว ✅', 'success')
+        return redirect(url_for('report'))
+
     return render_template('home.html')
 
 
@@ -97,16 +129,10 @@ def register():
 
 @app.route('/dashboard')
 def dashboard(): 
-    total_task = Task.query.count() 
-    completed_tasks = Task.query.filter_by(status='Completed').count() 
-    pending_tasks = Task.query.filter_by(status='Pendinf').count() 
+
     
     
-    
-    return render_template('dashboard.html', 
-                           total_task=total_task,
-                           completed_tasks=completed_tasks,
-                           pending_tasks=pending_tasks)
+    return render_template('dashboard.html')
 
 
 @app.route('/logout')
